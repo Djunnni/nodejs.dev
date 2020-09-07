@@ -1,13 +1,39 @@
-import React from 'react';
+import React,{ useState, useEffect } from 'react';
 import { ReleaseData } from '../../hooks/useReleaseHistory';
+
+import List from './components/List';
+import SelectBox from './components/SelectBox';
 
 interface Props {
   releases: ReleaseData[];
 }
 
 const ReleaseTable = ({ releases }: Props): JSX.Element => {
+  const [items, setItems] = useState<ReleaseData[]>([]); 
+  const [type,setType] = useState<string>('Date');
+  const [desc,setDesc] = useState<boolean>(true);
+  
+
+  useEffect(():void => {
+    setItems(releases);
+  },[releases]);
+
+  useEffect(():void => {
+    sorting();
+  },[type,desc]);
+
+  function sorting():void {
+    const newItems = items.slice();
+    setItems(newItems.sort(dateSort));
+  }
+
+  function dateSort(a: ReleaseData,b: ReleaseData):number {
+    return -1;
+  };
+
   return (
     <div className="overflow-horizontal-scroll">
+      <SelectBox type={type} desc={desc} updateType={setType} updateDesc={setDesc} />
       <table>
         <thead>
           <tr>
@@ -20,38 +46,7 @@ const ReleaseTable = ({ releases }: Props): JSX.Element => {
             <th>SHASUM</th>
           </tr>
         </thead>
-        <tbody>
-          {releases.map(
-            ({ version, date, npm, v8, lts }: ReleaseData): JSX.Element => {
-              const majorVersion = version.substring(1).split('.')[0];
-
-              return (
-                <tr key={version}>
-                  <td>{version}</td>
-                  <td>{lts || ''}</td>
-                  <td>{date}</td>
-                  <td>{v8}</td>
-                  <td>{npm}</td>
-                  <td>ABI?</td>
-                  <td>
-                    <a
-                      href={`https://github.com/nodejs/node/blob/master/doc/changelogs/CHANGELOG_V${majorVersion}.md#${version.substring(
-                        1
-                      )}`}
-                    >
-                      Changelog
-                    </a>
-                  </td>
-                  <td>
-                    <a href={`https://nodejs.org/download/release/${version}/`}>
-                      Download
-                    </a>
-                  </td>
-                </tr>
-              );
-            }
-          )}
-        </tbody>
+        <List releases={items}/>
       </table>
     </div>
   );
